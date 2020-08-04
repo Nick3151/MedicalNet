@@ -55,12 +55,12 @@ def parse_opts():
         help='Input size of depth')
     parser.add_argument(
         '--input_H',
-        default=448,
+        default=256,
         type=int,
         help='Input size of height')
     parser.add_argument(
         '--input_W',
-        default=448,
+        default=256,
         type=int,
         help='Input size of width')
     parser.add_argument(
