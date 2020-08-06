@@ -45,7 +45,7 @@ def parse_opts():
         help='Interation for saving model')
     parser.add_argument(
         '--n_epochs',
-        default=200,
+        default=80,
         type=int,
         help='Number of total epochs to run')
     parser.add_argument(
@@ -72,7 +72,7 @@ def parse_opts():
     )
     parser.add_argument(
         '--pretrain_path',
-        default='pretrain/resnet_34_23dataset.pth',
+        default='pretrain/resnet_34.pth',
         type=str,
         help=
         'Path for pretrained model.'
