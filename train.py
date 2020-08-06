@@ -4,7 +4,7 @@ Written by Whalechen
 '''
 
 from setting import parse_opts 
-from datasets.brains18 import BrainS18Dataset 
+from datasets.radonc import RadOncDataset
 from model import generate_model
 import torch
 import numpy as np
@@ -144,7 +144,7 @@ if __name__ == '__main__':
         sets.pin_memory = False
     else:
         sets.pin_memory = True    
-    training_dataset = BrainS18Dataset(sets.data_root, sets.img_list, sets)
+    training_dataset = RadOncDataset(sets.data_root, sets.img_list, sets)
     data_loader = DataLoader(training_dataset, batch_size=sets.batch_size, shuffle=True, num_workers=sets.num_workers, pin_memory=sets.pin_memory)
 
     # training
