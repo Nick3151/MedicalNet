@@ -50,7 +50,7 @@ def parse_opts():
         help='Number of total epochs to run')
     parser.add_argument(
         '--input_D',
-    default=56,
+    default=32,
         type=int,
         help='Input size of depth')
     parser.add_argument(
@@ -72,7 +72,7 @@ def parse_opts():
     )
     parser.add_argument(
         '--pretrain_path',
-        default='pretrain/resnet_50.pth',
+        default='pretrain/resnet_34_23dataset.pth',
         type=str,
         help=
         'Path for pretrained model.'
@@ -98,7 +98,7 @@ def parse_opts():
         help='(resnet | preresnet | wideresnet | resnext | densenet | ')
     parser.add_argument(
         '--model_depth',
-        default=50,
+        default=34,
         type=int,
         help='Depth of resnet (10 | 18 | 34 | 50 | 101)')
     parser.add_argument(

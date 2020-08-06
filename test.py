@@ -56,6 +56,7 @@ def test(data_loader, model, img_names, sets):
         with torch.no_grad():
             probs = model(volume)
             probs = F.softmax(probs, dim=1)
+            probs = probs.cpu()
 
         # resize mask to original size
         [batchsize, _, mask_d, mask_h, mask_w] = probs.shape
