@@ -16,6 +16,8 @@ import time
 from utils.logger import log
 from scipy import ndimage
 import os
+import matplotlib.pyplot as plt
+
 
 def train(data_loader, model, optimizer, scheduler, total_epochs, save_interval, save_folder, sets):
     # settings
@@ -31,11 +33,12 @@ def train(data_loader, model, optimizer, scheduler, total_epochs, save_interval,
         
     model.train()
     train_time_sp = time.time()
+    epoch_loss = []
     for epoch in range(total_epochs):
         log.info('Start epoch {}'.format(epoch))
-        
-        scheduler.step()
-        log.info('lr = {}'.format(scheduler.get_lr()))
+
+        log.info('lr = {}'.format(scheduler.get_last_lr()))
+        loss = 0
         
         for batch_id, batch_data in enumerate(data_loader):
             # getting data batch
@@ -64,14 +67,19 @@ def train(data_loader, model, optimizer, scheduler, total_epochs, save_interval,
 
             # calculating loss
             loss_value_seg = loss_seg(out_masks, new_label_masks)
-            loss = loss_value_seg
-            loss.backward()                
+            pred = out_masks.max(1)[1]
+            pred_sum, label_sum = (pred==1).sum(), (new_label_masks==1).sum()
+            dice = 2*(pred*new_label_masks==1).sum()//(pred_sum+label_sum)
+            loss = loss + loss_value_seg.data.item()
+            loss_value_seg.backward()
             optimizer.step()
+            scheduler.step()
 
             avg_batch_time = (time.time() - train_time_sp) / (1 + batch_id_sp)
             log.info(
-                    'Batch: {}-{} ({}), loss = {:.3f}, loss_seg = {:.3f}, avg_batch_time = {:.3f}'\
-                    .format(epoch, batch_id, batch_id_sp, loss.item(), loss_value_seg.item(), avg_batch_time))
+                    'Batch: {}-{} ({}), loss = {:.3f}, pred_sum = {:.3f}, label_sum = {:.3f}, dice = {:.3f}, avg_batch_time = {:.3f}'\
+                    .format(epoch, batch_id, batch_id_sp, loss_value_seg.item(), pred_sum, label_sum, dice.item(), avg_batch_time))
+
           
             if not sets.ci_test:
                 # save model
@@ -89,10 +97,13 @@ def train(data_loader, model, optimizer, scheduler, total_epochs, save_interval,
                                 'state_dict': model.state_dict(),
                                 'optimizer': optimizer.state_dict()},
                                 model_save_path)
-                            
+
+        epoch_loss.append(loss/batches_per_epoch)
+
     print('Finished training')            
     if sets.ci_test:
         exit()
+    return epoch_loss
 
 
 if __name__ == '__main__':
@@ -148,4 +159,8 @@ if __name__ == '__main__':
     data_loader = DataLoader(training_dataset, batch_size=sets.batch_size, shuffle=True, num_workers=sets.num_workers, pin_memory=sets.pin_memory)
 
     # training
-    train(data_loader, model, optimizer, scheduler, total_epochs=sets.n_epochs, save_interval=sets.save_intervals, save_folder=sets.save_folder, sets=sets) 
+    epoch_loss = train(data_loader, model, optimizer, scheduler, total_epochs=sets.n_epochs, save_interval=sets.save_intervals, save_folder=sets.save_folder, sets=sets)
+    plt.figure()
+    plt.plot(epoch_loss)
+    plt.title('Epoch Loss')
+    plt.show()
