@@ -167,6 +167,7 @@ class ResNet(nn.Module):
                                         stride=(1, 1, 1),
                                         bias=False) 
                                         )
+        self.softmax = nn.Softmax(dim=1)
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
@@ -211,6 +212,7 @@ class ResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.conv_seg(x)
+        x = self.softmax(x)
 
         return x
 

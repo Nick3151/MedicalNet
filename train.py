@@ -19,6 +19,19 @@ import os
 import matplotlib.pyplot as plt
 
 
+def dice_loss(pred, target, epsilon=1e-3):
+    [n, c, d, h, w] = pred.shape
+    target = target.unsqueeze(dim=1)
+
+    target_one_hot = torch.zeros(n, c, d, h, w).cuda()
+    target_one_hot = target_one_hot.scatter_(1, target, 1)
+    intersection = (pred * target_one_hot).sum(dim=(2,3,4))
+    pred_sum = torch.sum(pred * pred, dim=(2,3,4))
+    target_sum = torch.sum(target_one_hot * target_one_hot, dim=(2,3,4))
+    dice = (2*intersection + epsilon)/(pred_sum + target_sum + epsilon)
+    return 1 - torch.mean(dice, dim=1)
+
+
 def train(data_loader, model, optimizer, scheduler, total_epochs, save_interval, save_folder, sets):
     # settings
     batches_per_epoch = len(data_loader)
@@ -66,10 +79,14 @@ def train(data_loader, model, optimizer, scheduler, total_epochs, save_interval,
                 new_label_masks = new_label_masks.cuda()
 
             # calculating loss
-            loss_value_seg = loss_seg(out_masks, new_label_masks)
+            # print(out_masks.shape, new_label_masks.shape)
+            # loss_value_seg = loss_seg(out_masks, new_label_masks)
+            loss_value_seg = dice_loss(out_masks, new_label_masks)
             pred = out_masks.max(1)[1]
             pred_sum, label_sum = (pred==1).sum(), (new_label_masks==1).sum()
-            dice = 2*(pred*new_label_masks==1).sum()//(pred_sum+label_sum)
+            overlap = pred * new_label_masks
+            # print((overlap==1).sum())
+            dice = 2*(overlap==1).sum().item()/(pred_sum+label_sum).item()
             loss = loss + loss_value_seg.data.item()
             loss_value_seg.backward()
             optimizer.step()
@@ -78,7 +95,7 @@ def train(data_loader, model, optimizer, scheduler, total_epochs, save_interval,
             avg_batch_time = (time.time() - train_time_sp) / (1 + batch_id_sp)
             log.info(
                     'Batch: {}-{} ({}), loss = {:.3f}, pred_sum = {:.3f}, label_sum = {:.3f}, dice = {:.3f}, avg_batch_time = {:.3f}'\
-                    .format(epoch, batch_id, batch_id_sp, loss_value_seg.item(), pred_sum, label_sum, dice.item(), avg_batch_time))
+                    .format(epoch, batch_id, batch_id_sp, loss_value_seg.item(), pred_sum, label_sum, dice, avg_batch_time))
 
           
             if not sets.ci_test:
