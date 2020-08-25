@@ -12,10 +12,10 @@ import fnmatch
 import re
 
 
-input_dir = './data/RadOnc/NN_Ventricles/'
+input_dir = './data/RadOnc/MALPEM-Output/'
 output_dir = './data/RadOnc/labels/'
 files = os.listdir(input_dir)
-files = fnmatch.filter(files, '*ventricle*.nii.gz')
+# files = fnmatch.filter(files, '*ventricle*.nii.gz')
 
 for file_name in files:
     if not os.path.isdir(file_name):
@@ -27,7 +27,8 @@ for file_name in files:
 
         header_new = header.copy()
         data_new = np.zeros(np.shape(data))
-        index = [52, 51, 4]  # Left/Right/3rd Ventricle
+        # index = [52, 51, 4]  # Left/Right/3rd Ventricle
+        index = [24, 23, 1]  # Left/Right/3rd Ventricle
 
         for i, j in enumerate(index):
             data_new[data == j] = 1
@@ -43,8 +44,8 @@ test_labels = files[40:]
 
 with open('./data/train.txt', "w") as f:
     for train_label in train_labels:
-        name = re.sub('_ventricle_mask.nii.gz', '', train_label)
-        train_data = name + '_T1-crop-resampled.nii'
+        name = re.sub('_MALPEM.nii.gz', '', train_label)
+        train_data = name + '.nii'
         f.write('RadOnc/images/' + train_data + ' ')
         f.write('RadOnc/labels/' + train_label + '\n')
 
@@ -52,8 +53,8 @@ f.close()
 
 with open('./data/val.txt', "w") as f:
     for test_label in test_labels:
-        name = re.sub('_ventricle_mask.nii.gz', '', test_label)
-        test_data = name + '_T1-crop-resampled.nii'
+        name = re.sub('_MALPEM.nii.gz', '', test_label)
+        test_data = name + '.nii'
         f.write('RadOnc/images/' + test_data + ' ')
         f.write('RadOnc/labels/' + test_label + '\n')
 
