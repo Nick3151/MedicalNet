@@ -22,6 +22,7 @@ for file_name in files:
         label_name = os.path.join(input_dir, file_name)
         label = nibabel.load(label_name)
         data = label.get_fdata()
+        data = data.squeeze()
         header = label.header
         affine = label.affine
 
